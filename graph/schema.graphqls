@@ -1,0 +1,269 @@
+# go get -d github.com/99designs/gqlgen@v0.17.4 && go get github.com/99designs/gqlgen/internal/imports@v0.17.4 && go get github.com/99designs/gqlgen/codegen/config@v0.17.4 && go run github.com/99designs/gqlgen generate
+type Mutation {
+  approveLoan(input: approveLoanInput!): Boolean!
+  rejectLoan(input: rejectLoanInput!): Boolean!
+  RegisterAgent(input: RegisterAgentInput!): Boolean!
+
+  Register(input: UserRegisterInput!): RegistertionPayload!
+  VerifyIDSerialNumber(input: String!): Boolean!
+  VerifyEmail(input: VerificationInput!): Boolean!
+  SetPin(input: SetPinInput!): Boolean!
+  FirstTimeLogin(input: UserLoginInput!): RegistertionPayload!
+  PinLogin(input: PinLoginInput!): RegistertionPayload!
+
+  ApplyLoan(input: ApplyLoanInput!): Loan!
+
+  SubmitKyc(input: KycDetails!): Boolean!
+  VerifyKyc(input: VerifyKycInput!): Boolean!
+
+  RepayLoan(input: LoanPaymentInput!): Boolean!
+
+  ChangePassword(input: changePasswordInput!): Boolean!
+  ChangePin(input: changePinInput!): Boolean!
+
+  AgentLogin(input: LoginInput!): AgentAuthPayload!
+  #reset and forgot password/pin stuff
+  # resetPassword(inp ut:resetPasswordInput!):ID!
+  # resetPin(input:resetPinInput!):ID!
+  # setNewPassword(input:setPasswordInput!):Boolean!
+}
+
+type Query {
+  FetchKyc(input: FetchKycInput!): [KycQuestion!]!
+  FetchUserDetails(input: fetchUserInput!): User!
+  FetchLoanDetails(input: fetchLoanInput!): Loan!
+  FetchAllUserLoans(input: fetchUserLoansInput!): [Loan!]!
+  FetchUsers(input: PaginationInput): [User!]!
+  FetchAllLoans(input: LoansInput!): [Loan!]!
+  FetchAgents(input: PaginationInput): [Agent!]!
+  FetchAgentDetails(input: fetchAgentInput!): Agent!
+  SearchUser(input: String!): ID!
+  FetchFaqs(input: PaginationInput): [Faq!]!
+}
+
+scalar Time #DateTime Formated in RFC3339 :: eg 2006-01-02T15:04:05Z
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input UserRegisterInput {
+  name: String!
+  phone: String!
+  password: String!
+  email: String!
+  confirmPassword: String!
+}
+
+input KycDetails {
+  token: String!
+  details: [Detail!]!
+}
+input Detail {
+  description: String!
+  answer: String!
+}
+
+input rejectLoanInput {
+  token: String!
+  loanId: ID!
+}
+
+input FetchKycInput {
+  token: String!
+}
+
+input VerifyKycInput {
+  token: String!
+  userId: ID!
+}
+
+input approveLoanInput {
+  token: String!
+  loanId: ID!
+  transactionRef: String!
+}
+
+input UserLoginInput {
+  phone: String!
+  password: String!
+}
+
+input VerificationInput {
+  userId: ID!
+  otp: String!
+}
+
+input SetPinInput {
+  token: String!
+  pin: Int!
+}
+
+type RegistertionPayload {
+  token: String!
+}
+
+type AdminAuthPayload {
+  token: String!
+}
+
+type AgentAuthPayload {
+  token: String!
+}
+
+input PinLoginInput {
+  token: String!
+  pin: Int!
+}
+
+input ApplyLoanInput {
+  token: String!
+  amount: Int!
+  reason: String!
+  expectedPaymentDate: Time!
+}
+
+input LoansInput {
+  page: Int!
+  status: LoanStatus!
+}
+
+input PaginationInput {
+  page: Int!
+}
+
+input RegisterAgentInput {
+  name: String!
+  NationalId: String!
+  address: String!
+  email: String!
+  phone: String!
+  password: String!
+  token: String!
+}
+
+type Agent {
+  id: ID!
+  name: String!
+  phone: String!
+  createdAt: Time!
+  address: String!
+  NationalId: String!
+  email: String!
+}
+
+input fetchAgentInput {
+  id: ID!
+  token: String!
+}
+
+type Faq {
+  question: String!
+  answer: String!
+}
+
+enum LoanStatus {
+  created #loan created but  NOT approved
+  current #loan money sent to user and loan is now active waiting repayment ; can be used to check overdue loans by date
+  declined #loan approval rejected
+  completed #loan repayment complete
+  overdue
+}
+
+type KycQuestion {
+  questionText: String!
+  choices: [KycChoice!]
+  questionScore: Int!
+}
+
+type KycChoice {
+  choiceName: String!
+  choiceScore: Int!
+}
+
+input LoanPaymentInput {
+  loanId: ID!
+  token: String!
+  payAmount: Int!
+  transactionRef: String!
+}
+
+type LoanPayment {
+  paymentId: ID!
+  loanId: ID!
+  paidAmount: Int!
+  amountLeft: Int!
+  paidDate: Time!
+  status: LoanStatus!
+  transactionReference: String!
+}
+
+input changePasswordInput {
+  token: String!
+  oldPassword: String!
+  newPassword: String!
+  confirmPassword: String!
+}
+
+input changePinInput {
+  token: String!
+  password: String!
+  newPin: Int!
+}
+
+input fetchUserInput {
+  userId: String!
+  token: String!
+}
+
+type User {
+  userID: String!
+  name: String!
+  createdAt: Time!
+  email: String!
+  phone: String!
+  hasPin: Boolean!
+  loanLimit: Int!
+  totalLoan: Int!
+  totalPaid: Int!
+  timesLoaned: Int!
+  creditScore: Int!
+  hasCompletedKYC: Boolean!
+  hasSubmittedKYC: Boolean!
+  profilePhotoURL: String!
+  frontIDPhotoURL: String!
+  loans: [Loan!]!
+  kycdetails: [UserDetails!]!
+}
+
+type UserDetails {
+  description: String!
+  answer: String!
+}
+
+input fetchLoanInput {
+  loanId: String!
+  token: String!
+}
+
+type Loan {
+  loanId: String!
+  userId: String!
+  userName: String!
+  amount: Int!
+  phoneNumber: String!
+  paidAmount: Int!
+  loanDate: Time!
+  expectedPayAmount: Int!
+  expectedPayDate: Time!
+  status: LoanStatus!
+  completedDate: Time!
+  payments: [LoanPayment!]!
+}
+
+input fetchUserLoansInput {
+  token: String!
+  userId: String!
+  page: Int!
+  status: LoanStatus!
+}
